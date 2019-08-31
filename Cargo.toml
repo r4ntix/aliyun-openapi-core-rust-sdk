@@ -1,0 +1,20 @@
+[package]
+name = "aliyun-openapi-core-rust-sdk"
+description = "Aliyun OpenAPI POP core SDK for Rust"
+version = "0.1.0"
+keywords = ["aliyun", "openapi", "api", "sdk"]
+categories = ["api-bindings"]
+authors = ["mc404 <antix.blue@antix.blue>"]
+license = "MIT"
+documentation = "https://docs.rs/aliyun-openapi-core-rust-sdk"
+repository = "https://github.com/r4ntix/aliyun-openapi-core-rust-sdk"
+readme = "README.md"
+edition = "2018"
+
+[dependencies]
+base64 = "0.10.1"
+chrono = "0.4.7"
+failure = "0.1.5"
+reqwest = "0.9.20"
+rust-crypto = "0.2.36"
+url = "2.1.0"
