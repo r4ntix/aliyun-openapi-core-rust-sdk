@@ -12,12 +12,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.request(String::from("DescribeRegions"), &[])?;
+    let response = aliyun_openapi_client.request("DescribeRegions", &[])?;
     println!("DescribeRegions response: {}", response);
 
     // call `DescribeVpcs` with queries.
-    let response = aliyun_openapi_client
-        .request(String::from("DescribeVpcs"), &[("RegionId", "cn-hangzhou")])?;
+    let response = aliyun_openapi_client.request("DescribeVpcs", &[("RegionId", "cn-hangzhou")])?;
     println!("DescribeVpcs response: {}", response);
 
     Ok(())

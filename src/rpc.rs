@@ -49,7 +49,7 @@ impl Client {
     /// Send a request to api service.
     ///
     /// if queries is empty, can pass `&[]`
-    pub fn request(&self, action: String, queries: &[(&str, &str)]) -> Result<String, Error> {
+    pub fn request(&self, action: &str, queries: &[(&str, &str)]) -> Result<String, Error> {
         // gen timestamp.
         let nonce = Local::now().timestamp_subsec_nanos().to_string();
         let ts = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
@@ -77,7 +77,7 @@ impl Client {
         );
 
         // sign params, get finnal request url.
-        let sign = Client::sign(format!("{}&", self.access_key_secret), &string_to_sign);
+        let sign = Client::sign(&format!("{}&", self.access_key_secret), &string_to_sign);
         let signature = Client::url_encode(&sign);
         let final_url = format!(
             "{}?Signature={}&{}",
@@ -98,7 +98,7 @@ impl Client {
             .replace("%7E", "~")
     }
 
-    fn sign(key: String, body: &str) -> String {
+    fn sign(key: &str, body: &str) -> String {
         let mut mac = Hmac::new(Sha1::new(), key.as_bytes());
         mac.input(body.as_bytes());
         let result = mac.result();

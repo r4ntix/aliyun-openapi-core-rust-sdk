@@ -12,14 +12,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.request(String::from("DescribeRegions"), &[])?;
+    let response = aliyun_openapi_client.request("DescribeRegions", &[])?;
     println!("DescribeRegions response: {}", response);
 
     // call `DescribeDBInstances` with queries.
-    let response = aliyun_openapi_client.request(
-        String::from("DescribeDBInstances"),
-        &[("RegionId", "cn-hangzhou")],
-    )?;
+    let response =
+        aliyun_openapi_client.request("DescribeDBInstances", &[("RegionId", "cn-hangzhou")])?;
     println!("DescribeDBInstances response: {}", response);
 
     Ok(())
