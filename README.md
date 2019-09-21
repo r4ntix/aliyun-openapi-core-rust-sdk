@@ -1,17 +1,11 @@
 # aliyun-openapi-core-rust-sdk
 
+[![Crates Status](http://meritbadge.herokuapp.com/aliyun-openapi-core-rust-sdk)](https://crates.io/crates/aliyun-openapi-core-rust-sdk)
+[![Actions Status](https://github.com/r4ntix/aliyun-openapi-core-rust-sdk/workflows/ci.yml/badge.svg)](https://github.com/r4ntix/aliyun-openapi-core-rust-sdk/actions)
+
 Aliyun OpenAPI POP core SDK for Rust.
 
-## Installation
-
-Write into Cargo.toml dependencies:
-
-```toml
-[dependencies]
-aliyun-openapi-core-rust-sdk = "0.2.0"
-```
-
-### Notes
+## Notes
 
 You must know your `AK`(`accessKeyId/accessKeySecret`), and the aliyun product's `endpoint` and `apiVersion`.
 
@@ -36,9 +30,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         String::from("<version>"),
     );
 
+    // call `DescribeRegions` with empty queries.
+    let response = aliyun_openapi_client.get("DescribeRegions").send()?;
+    println!("DescribeRegions response: {}", response);
+
     // call `DescribeInstances` with queries.
-    let response =
-        aliyun_openapi_client.request("DescribeInstances", &[("RegionId", "cn-hangzhou")])?;
+    let response = aliyun_openapi_client
+        .get("DescribeInstances")
+        .query(&[("RegionId", "cn-hangzhou")])
+        .send()?;
     println!("DescribeInstances response: {}", response);
 
     Ok(())
