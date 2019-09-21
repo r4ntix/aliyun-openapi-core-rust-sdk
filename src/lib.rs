@@ -12,7 +12,7 @@
 //!
 //! The RPC style client:
 //!
-//! ```rust
+//! ```no_run
 //! use aliyun_openapi_core_rust_sdk::RPClient;
 //! use std::error::Error;
 //!
@@ -42,7 +42,7 @@
 //!
 //! The ROA style client:
 //!
-//! ```rust
+//! ```no_run
 //! unimplemented!();
 //! ```
 //! # Examples
