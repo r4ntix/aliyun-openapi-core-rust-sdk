@@ -25,10 +25,16 @@
 //!         String::from("<version>"),
 //!     );
 //!
+//!     // call `DescribeRegions` with empty queries.
+//!     let response = aliyun_openapi_client.get("DescribeRegions").send()?;
+//!     println!("DescribeRegions response: {}", response);
+//!
 //!     // call `DescribeInstances` with queries.
-//!     let response =
-//!             aliyun_openapi_client.request("DescribeInstances", &[("RegionId", "cn-hangzhou")])?;
-//!         println!("DescribeInstances response: {}", response);
+//!     let response = aliyun_openapi_client
+//!         .get("DescribeInstances")
+//!         .query(&[("RegionId", "cn-hangzhou")])
+//!         .send()?;
+//!     println!("DescribeInstances response: {}", response);
 //!
 //!     Ok(())
 //! }

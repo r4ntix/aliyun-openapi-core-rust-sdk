@@ -8,7 +8,7 @@ Write into Cargo.toml dependencies:
 
 ```toml
 [dependencies]
-aliyun-openapi-core-rust-sdk = "0.2.0"
+aliyun-openapi-core-rust-sdk = "0.3.0"
 ```
 
 ### Notes
@@ -36,9 +36,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         String::from("<version>"),
     );
 
+    // call `DescribeRegions` with empty queries.
+    let response = aliyun_openapi_client.get("DescribeRegions").send()?;
+    println!("DescribeRegions response: {}", response);
+
     // call `DescribeInstances` with queries.
-    let response =
-        aliyun_openapi_client.request("DescribeInstances", &[("RegionId", "cn-hangzhou")])?;
+    let response = aliyun_openapi_client
+        .get("DescribeInstances")
+        .query(&[("RegionId", "cn-hangzhou")])
+        .send()?;
     println!("DescribeInstances response: {}", response);
 
     Ok(())

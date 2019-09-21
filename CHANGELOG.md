@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - ROA style client.
 
+## [0.3.0] - 2019-09-21
+
+### Added
+- New function(`get`, `query`, `send`) for RPC style client.
+
+### Deprecated
+- `request` function is deprecated, please use the `get` function instead.
+
 ## [0.2.0] - 2019-09-01
 
 ### Changed
