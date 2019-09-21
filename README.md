@@ -1,17 +1,10 @@
 # aliyun-openapi-core-rust-sdk
 
+[![](http://meritbadge.herokuapp.com/aliyun-openapi-core-rust-sdk)](https://crates.io/crates/aliyun-openapi-core-rust-sdk)
+
 Aliyun OpenAPI POP core SDK for Rust.
 
-## Installation
-
-Write into Cargo.toml dependencies:
-
-```toml
-[dependencies]
-aliyun-openapi-core-rust-sdk = "0.3.0"
-```
-
-### Notes
+## Notes
 
 You must know your `AK`(`accessKeyId/accessKeySecret`), and the aliyun product's `endpoint` and `apiVersion`.
 
