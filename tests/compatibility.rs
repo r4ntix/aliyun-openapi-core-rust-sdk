@@ -2,9 +2,9 @@ use aliyun_openapi_core_rust_sdk::RPClient;
 use std::env;
 use std::error::Error;
 
-// rpc style client test.
+// 0.2.0 version, rpc style client test.
 #[test]
-fn rpc_client_no_query() -> Result<(), Box<dyn Error>> {
+fn rpc_client_no_query_compatibility_020() -> Result<(), Box<dyn Error>> {
     // create rpc style api client.
     let aliyun_openapi_client = RPClient::new(
         env::var("ACCESS_KEY_ID")?,
@@ -14,16 +14,16 @@ fn rpc_client_no_query() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.get("DescribeRegions").send();
+    let response = aliyun_openapi_client.request("DescribeRegions", &[]);
 
     assert!(response.is_ok());
 
     Ok(())
 }
 
-// rpc style client test with query.
+// 0.2.0 version, rpc style client test with query.
 #[test]
-fn rpc_client_with_query() -> Result<(), Box<dyn Error>> {
+fn rpc_client_with_query_compatibility_020() -> Result<(), Box<dyn Error>> {
     // create rpc style api client.
     let aliyun_openapi_client = RPClient::new(
         env::var("ACCESS_KEY_ID")?,
@@ -33,10 +33,8 @@ fn rpc_client_with_query() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeInstances` with queries.
-    let response = aliyun_openapi_client
-        .get("DescribeInstances")
-        .query(&[("RegionId", "cn-hangzhou")])
-        .send();
+    let response =
+        aliyun_openapi_client.request("DescribeInstances", &[("RegionId", "cn-hangzhou")]);
 
     assert!(response.is_ok());
 
