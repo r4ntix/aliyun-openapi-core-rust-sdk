@@ -1,8 +1,9 @@
 # aliyun-openapi-core-rust-sdk
 
-![Crates.io](https://img.shields.io/crates/v/aliyun-openapi-core-rust-sdk)
-![Crates.io](https://img.shields.io/crates/d/aliyun-openapi-core-rust-sdk)
+[![Crates.io](https://img.shields.io/crates/v/aliyun-openapi-core-rust-sdk)](https://crates.io/crates/aliyun-openapi-core-rust-sdk)
+[![Documentation](https://docs.rs/aliyun-openapi-core-rust-sdk/badge.svg)](https://docs.rs/aliyun-openapi-core-rust-sdk)
 [![Actions Status](https://github.com/r4ntix/aliyun-openapi-core-rust-sdk/workflows/Continuous%20integration/badge.svg)](https://github.com/r4ntix/aliyun-openapi-core-rust-sdk/actions)
+[![Crates.io Download Stats](https://img.shields.io/crates/d/aliyun-openapi-core-rust-sdk)](https://crates.io/crates/aliyun-openapi-core-rust-sdk)
 
 Aliyun OpenAPI POP core SDK for Rust.
 
