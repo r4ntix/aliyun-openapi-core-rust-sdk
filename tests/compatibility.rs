@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use aliyun_openapi_core_rust_sdk::RPClient;
 use std::env;
 use std::error::Error;

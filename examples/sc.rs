@@ -3,7 +3,7 @@ use std::env;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // create rpc style api client.
+    // create roa style api client.
     let aliyun_openapi_client = ROAClient::new(
         env::var("ACCESS_KEY_ID")?,
         env::var("ACCESS_KEY_SECRET")?,
