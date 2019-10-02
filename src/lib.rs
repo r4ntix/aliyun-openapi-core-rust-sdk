@@ -66,6 +66,8 @@
 //! cargo run --example vpc
 //! ```
 
+mod roa;
 mod rpc;
 
+pub use crate::roa::Client as ROAClient;
 pub use crate::rpc::Client as RPClient;
