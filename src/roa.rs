@@ -3,8 +3,9 @@ use chrono::{Local, Utc};
 use crypto::{digest::Digest, hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1};
 use failure::{format_err, Error};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::{Client as HttpClient, RequestBuilder as ReqwestRequestBuilder};
+use reqwest::ClientBuilder;
 use std::env;
+use std::time::Duration;
 use std::{borrow::Borrow, str::FromStr};
 use url::Url;
 
@@ -17,12 +18,11 @@ const DEFAULT_HEADER: &[(&str, &str)] = &[
 
 #[derive(Debug)]
 struct Request {
-    action: String,
+    method: String,
     uri: String,
     body: Option<String>,
     query: Vec<(String, String)>,
     headers: HeaderMap,
-    reqwest_request_builder: ReqwestRequestBuilder,
 }
 
 /// The roa style api client.
@@ -36,8 +36,6 @@ pub struct Client {
     endpoint: String,
     /// The api version of aliyun api service.
     version: String,
-    /// The http client used to send request.
-    http: HttpClient,
 }
 
 impl Client {
@@ -53,14 +51,11 @@ impl Client {
             access_key_secret,
             endpoint,
             version,
-            http: HttpClient::new(),
         }
     }
 
     /// Create a get request builder, and set uri of api.
     pub fn get(&self, uri: &str) -> RequestBuilder {
-        let final_url = format!("{}{}", self.endpoint, uri);
-        let reqwest_request_builder = self.http.get(&final_url);
         RequestBuilder::new(
             &self.access_key_id,
             &self.access_key_secret,
@@ -68,12 +63,12 @@ impl Client {
             &self.version,
             String::from("GET"),
             String::from(uri),
-            reqwest_request_builder,
         )
     }
 }
 
 /// The request builder struct.
+#[derive(Debug)]
 pub struct RequestBuilder<'a> {
     /// The access key id of aliyun developer account.
     access_key_id: &'a str,
@@ -81,6 +76,8 @@ pub struct RequestBuilder<'a> {
     access_key_secret: &'a str,
     /// The api endpoint of aliyun api service (need start with http:// or https://).
     endpoint: &'a str,
+    /// The http client builder used to send request.
+    http_client_builder: ClientBuilder,
     /// The config of http request.
     request: Request,
 }
@@ -92,9 +89,8 @@ impl<'a> RequestBuilder<'a> {
         access_key_secret: &'a str,
         endpoint: &'a str,
         version: &'a str,
-        action: String,
+        method: String,
         uri: String,
-        reqwest_request_builder: ReqwestRequestBuilder,
     ) -> Self {
         // init http headers.
         let mut headers = HeaderMap::new();
@@ -120,13 +116,13 @@ impl<'a> RequestBuilder<'a> {
             access_key_id,
             access_key_secret,
             endpoint,
+            http_client_builder: ClientBuilder::new(),
             request: Request {
-                action,
+                method,
                 uri,
                 body: None,
                 query: Vec::new(),
                 headers,
-                reqwest_request_builder,
             },
         }
     }
@@ -161,7 +157,6 @@ impl<'a> RequestBuilder<'a> {
         if let Ok(body_md5) = body_md5 {
             self.request.headers.insert("content-md5", body_md5);
         }
-        self.request.reqwest_request_builder = self.request.reqwest_request_builder.body(body);
         self
     }
 
@@ -208,10 +203,20 @@ impl<'a> RequestBuilder<'a> {
             .headers
             .insert("Authorization", authorization.parse()?);
 
+        // build http client.
+        let final_url = format!("{}{}", self.endpoint, self.request.uri);
+        let mut http_client = self
+            .http_client_builder
+            .build()?
+            .request(self.request.method.parse()?, &final_url);
+
+        // set body.
+        if let Some(body) = self.request.body {
+            http_client = http_client.body(body);
+        }
+
         // send request.
-        let response = self
-            .request
-            .reqwest_request_builder
+        let response = http_client
             .headers(self.request.headers)
             .query(&self.request.query)
             .send()?
@@ -221,6 +226,19 @@ impl<'a> RequestBuilder<'a> {
         Ok(response)
     }
 
+    /// Set a timeout for connect, read and write operations of a `Client`.
+    ///
+    /// Default is 30 seconds.
+    ///
+    /// Pass `None` to disable timeout.
+    pub fn timeout<T>(mut self, timeout: T) -> Self
+    where
+        T: Into<Option<Duration>>,
+    {
+        self.http_client_builder = self.http_client_builder.timeout(timeout);
+        self
+    }
+
     /// Compute signature for request.
     fn signature(&self) -> String {
         // build body.
@@ -228,7 +246,7 @@ impl<'a> RequestBuilder<'a> {
         let canonicalized_resource = self.canonicalized_resource();
         let body = format!(
             "{}\n{}\n{}\n{}\n{}\n{}\n{}",
-            self.request.action.to_uppercase(),
+            self.request.method.to_uppercase(),
             self.request.headers["accept"].to_str().unwrap(),
             self.request
                 .headers
