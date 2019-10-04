@@ -16,6 +16,7 @@ const DEFAULT_HEADER: &[(&str, &str)] = &[
     ("x-acs-signature-version", "1.0"),
 ];
 
+/// Config for request.
 #[derive(Debug)]
 struct Request {
     method: String,
@@ -54,14 +55,28 @@ impl Client {
         }
     }
 
-    /// Create a get request builder, and set uri of api.
+    /// Create a `GET` request with the `uri`.
+    ///
+    /// Returns a `RequestBuilder` for send request.
     pub fn get(&self, uri: &str) -> RequestBuilder {
+        self.execute("GET", uri)
+    }
+
+    /// Create a `POST` request with the `uri`.
+    ///
+    /// Returns a `RequestBuilder` for send request.
+    pub fn post(&self, uri: &str) -> RequestBuilder {
+        self.execute("POST", uri)
+    }
+
+    /// Create a request with the `method` and `uri`.
+    fn execute(&self, method: &str, uri: &str) -> RequestBuilder {
         RequestBuilder::new(
             &self.access_key_id,
             &self.access_key_secret,
             &self.endpoint,
             &self.version,
-            String::from("GET"),
+            String::from(method),
             String::from(uri),
         )
     }
@@ -127,19 +142,6 @@ impl<'a> RequestBuilder<'a> {
         }
     }
 
-    /// Set queries for request.
-    pub fn query<I>(mut self, iter: I) -> Self
-    where
-        I: IntoIterator,
-        I::Item: Borrow<(&'a str, &'a str)>,
-    {
-        for i in iter.into_iter() {
-            let b = i.borrow();
-            self.request.query.push((b.0.to_string(), b.1.to_string()));
-        }
-        self
-    }
-
     /// Set body for request.
     pub fn body(mut self, body: &'static str) -> Self {
         // store body string.
@@ -176,6 +178,19 @@ impl<'a> RequestBuilder<'a> {
                     self.request.headers.insert(key, value);
                 }
             }
+        }
+        self
+    }
+
+    /// Set queries for request.
+    pub fn query<I>(mut self, iter: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: Borrow<(&'a str, &'a str)>,
+    {
+        for i in iter.into_iter() {
+            let b = i.borrow();
+            self.request.query.push((b.0.to_string(), b.1.to_string()));
         }
         self
     }
@@ -239,6 +254,44 @@ impl<'a> RequestBuilder<'a> {
         self
     }
 
+    /// Compute canonicalized headers.
+    fn canonicalized_headers(&self) -> String {
+        let mut headers: Vec<(String, String)> = self
+            .request
+            .headers
+            .iter()
+            .filter_map(|(k, v)| {
+                let k = k.as_str().to_lowercase();
+                if k.starts_with("x-acs-") {
+                    Some((k, v.to_str().unwrap().to_string()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        headers.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let headers: Vec<String> = headers
+            .iter()
+            .map(|(k, v)| format!("{}:{}", k, v))
+            .collect();
+
+        headers.join("\n")
+    }
+
+    /// Compute canonicalized resource.
+    fn canonicalized_resource(&self) -> String {
+        if !self.request.query.is_empty() {
+            let mut params = self.request.query.clone();
+            params.sort_by_key(|item| item.0.clone());
+            let params: Vec<String> = params.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+            let sorted_query_string = params.join("&");
+            format!("{}?{}", self.request.uri, sorted_query_string)
+        } else {
+            self.request.uri.clone()
+        }
+    }
+
     /// Compute signature for request.
     fn signature(&self) -> String {
         // build body.
@@ -271,41 +324,5 @@ impl<'a> RequestBuilder<'a> {
         let result = mac.result();
         let code = result.code();
         base64::encode(code)
-    }
-
-    fn canonicalized_headers(&self) -> String {
-        let mut headers: Vec<(String, String)> = self
-            .request
-            .headers
-            .iter()
-            .filter_map(|(k, v)| {
-                let k = k.as_str().to_lowercase();
-                if k.starts_with("x-acs-") {
-                    Some((k, v.to_str().unwrap().to_string()))
-                } else {
-                    None
-                }
-            })
-            .collect();
-        headers.sort_by(|a, b| a.0.cmp(&b.0));
-
-        let headers: Vec<String> = headers
-            .iter()
-            .map(|(k, v)| format!("{}:{}", k, v))
-            .collect();
-
-        headers.join("\n")
-    }
-
-    fn canonicalized_resource(&self) -> String {
-        if !self.request.query.is_empty() {
-            let mut params = self.request.query.clone();
-            params.sort_by_key(|item| item.0.clone());
-            let params: Vec<String> = params.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
-            let sorted_query_string = params.join("&");
-            format!("{}?{}", self.request.uri, sorted_query_string)
-        } else {
-            self.request.uri.clone()
-        }
     }
 }

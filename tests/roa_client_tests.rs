@@ -3,9 +3,9 @@ use std::env;
 use std::error::Error;
 use std::time::Duration;
 
-// roa style client test.
+// roa style client `GET` test.
 #[test]
-fn roa_client_no_query() -> Result<(), Box<dyn Error>> {
+fn roa_client_get_no_query() -> Result<(), Box<dyn Error>> {
     // create roa style api client.
     let aliyun_openapi_client = ROAClient::new(
         env::var("ACCESS_KEY_ID")?,
@@ -22,8 +22,9 @@ fn roa_client_no_query() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+// roa style client `GET` test with timeout.
 #[test]
-fn roa_client_with_timeout() -> Result<(), Box<dyn Error>> {
+fn roa_client_get_with_timeout() -> Result<(), Box<dyn Error>> {
     // create roa style api client.
     let aliyun_openapi_client = ROAClient::new(
         env::var("ACCESS_KEY_ID")?,

@@ -15,6 +15,7 @@ const DEFAULT_PARAM: &[(&str, &str)] = &[
 ];
 
 /// Config for request.
+#[derive(Debug)]
 struct Request {
     action: String,
     method: String,
