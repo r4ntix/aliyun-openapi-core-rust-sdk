@@ -50,16 +50,28 @@ impl Client {
         }
     }
 
-    /// Create a get request, and set action of api.
+    /// Create a `GET` request with the `action`.
     ///
-    /// This function return a `RequestBuilder` for send request.
+    /// Returns a `RequestBuilder` for send request.
     pub fn get(&self, action: &str) -> RequestBuilder {
+        self.execute("GET", action)
+    }
+
+    /// Create a `POST` request with the `action`.
+    ///
+    /// Returns a `RequestBuilder` for send request.
+    pub fn post(&self, action: &str) -> RequestBuilder {
+        self.execute("POST", action)
+    }
+
+    /// Create a request with the `method` and `action`.
+    fn execute(&self, method: &str, action: &str) -> RequestBuilder {
         RequestBuilder::new(
             &self.access_key_id,
             &self.access_key_secret,
             &self.endpoint,
             &self.version,
-            String::from("GET"),
+            String::from(method),
             String::from(action),
         )
     }
