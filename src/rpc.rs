@@ -2,8 +2,9 @@ use base64;
 use chrono::{Local, Utc};
 use crypto::{hmac::Hmac, mac::Mac, sha1::Sha1};
 use failure::Error;
-use reqwest::Client as HttpClient;
+use reqwest::ClientBuilder;
 use std::borrow::Borrow;
+use std::time::Duration;
 use url::form_urlencoded::byte_serialize;
 
 /// Default const param.
@@ -14,8 +15,9 @@ const DEFAULT_PARAM: &[(&str, &str)] = &[
 ];
 
 /// Config for request.
-struct Config {
+struct Request {
     action: String,
+    method: String,
     query: Vec<(String, String)>,
 }
 
@@ -30,8 +32,6 @@ pub struct Client {
     endpoint: String,
     /// The api version of aliyun api service.
     version: String,
-    /// The http client used to send request.
-    http: HttpClient,
 }
 
 impl Client {
@@ -47,22 +47,21 @@ impl Client {
             access_key_secret,
             endpoint,
             version,
-            http: HttpClient::new(),
         }
     }
 
     /// Create a get request, and set action of api.
     ///
-    /// This function return a `Request` struct for send request.
-    pub fn get(&self, action: &str) -> Request {
-        Request::new(
+    /// This function return a `RequestBuilder` for send request.
+    pub fn get(&self, action: &str) -> RequestBuilder {
+        RequestBuilder::new(
             &self.access_key_id,
             &self.access_key_secret,
             &self.endpoint,
             &self.version,
-            &self.http,
+            String::from("GET"),
+            String::from(action),
         )
-        .get(action)
     }
 
     /// Send a request to api service.
@@ -105,15 +104,15 @@ impl Client {
         );
 
         // send request.
-        let response = self.http.get(&final_url).send()?.text()?;
+        let response = reqwest::get(&final_url)?.text()?;
 
         // return response.
         Ok(response)
     }
 }
 
-/// The request.
-pub struct Request<'a> {
+/// The RequestBuilder.
+pub struct RequestBuilder<'a> {
     /// The access key id of aliyun developer account.
     access_key_id: &'a str,
     /// The access key secret of aliyun developer account.
@@ -123,37 +122,33 @@ pub struct Request<'a> {
     /// The api version of aliyun api service.
     version: &'a str,
     /// The config of http request.
-    config: Config,
-    /// The http client used to send request.
-    http: &'a HttpClient,
+    request: Request,
+    /// The http client builder used to send request.
+    http_client_builder: ClientBuilder,
 }
 
-impl<'a> Request<'a> {
+impl<'a> RequestBuilder<'a> {
     /// Create a request object.
     pub fn new(
         access_key_id: &'a str,
         access_key_secret: &'a str,
         endpoint: &'a str,
         version: &'a str,
-        http: &'a HttpClient,
+        action: String,
+        method: String,
     ) -> Self {
-        Request {
+        RequestBuilder {
             access_key_id,
             access_key_secret,
             endpoint,
             version,
-            config: Config {
-                action: String::new(),
+            request: Request {
+                action,
+                method,
                 query: Vec::new(),
             },
-            http,
+            http_client_builder: ClientBuilder::new(),
         }
-    }
-
-    /// Create a get request, and set action of api.
-    pub fn get(mut self, action: &str) -> Self {
-        self.config.action = action.to_string();
-        self
     }
 
     /// Set queries for request.
@@ -164,26 +159,26 @@ impl<'a> Request<'a> {
     {
         for i in iter.into_iter() {
             let b = i.borrow();
-            self.config.query.push((b.0.to_string(), b.1.to_string()));
+            self.request.query.push((b.0.to_string(), b.1.to_string()));
         }
         self
     }
 
     /// Send a request to api service.
-    pub fn send(&self) -> Result<String, Error> {
+    pub fn send(self) -> Result<String, Error> {
         // gen timestamp.
         let nonce = Local::now().timestamp_subsec_nanos().to_string();
         let ts = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
         // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
-        params.push(("Action", &self.config.action));
+        params.push(("Action", &self.request.action));
         params.push(("AccessKeyId", &self.access_key_id));
         params.push(("SignatureNonce", &nonce));
         params.push(("Timestamp", &ts));
         params.push(("Version", &self.version));
         params.extend(
-            self.config
+            self.request
                 .query
                 .iter()
                 .map(|(k, v)| (k.as_ref(), v.as_ref())),
@@ -210,19 +205,31 @@ impl<'a> Request<'a> {
             self.endpoint, signature, sorted_query_string
         );
 
+        // build http client.
+        let http_client = self
+            .http_client_builder
+            .build()?
+            .request(self.request.method.parse()?, &final_url);
+
         // send request.
-        let response = self.http.get(&final_url).send()?.text()?;
+        let response = http_client.send()?.text()?;
 
         // return response.
         Ok(response)
     }
-}
 
-fn url_encode(s: &str) -> String {
-    let s: String = byte_serialize(s.as_bytes()).collect();
-    s.replace("+", "%20")
-        .replace("*", "%2A")
-        .replace("%7E", "~")
+    /// Set a timeout for connect, read and write operations of a `Client`.
+    ///
+    /// Default is 30 seconds.
+    ///
+    /// Pass `None` to disable timeout.
+    pub fn timeout<T>(mut self, timeout: T) -> Self
+    where
+        T: Into<Option<Duration>>,
+    {
+        self.http_client_builder = self.http_client_builder.timeout(timeout);
+        self
+    }
 }
 
 fn sign(key: &str, body: &str) -> String {
@@ -231,4 +238,11 @@ fn sign(key: &str, body: &str) -> String {
     let result = mac.result();
     let code = result.code();
     base64::encode(code)
+}
+
+fn url_encode(s: &str) -> String {
+    let s: String = byte_serialize(s.as_bytes()).collect();
+    s.replace("+", "%20")
+        .replace("*", "%2A")
+        .replace("%7E", "~")
 }
