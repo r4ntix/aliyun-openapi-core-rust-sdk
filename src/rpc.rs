@@ -1,7 +1,6 @@
-use base64;
+use anyhow::Result;
 use chrono::{Local, Utc};
 use crypto::{hmac::Hmac, mac::Mac, sha1::Sha1};
-use failure::Error;
 use reqwest::ClientBuilder;
 use std::borrow::Borrow;
 use std::time::Duration;
@@ -81,7 +80,7 @@ impl Client {
     ///
     /// if queries is empty, can pass `&[]`
     #[deprecated(since = "0.3.0", note = "Please use the `get` function instead")]
-    pub fn request(&self, action: &str, queries: &[(&str, &str)]) -> Result<String, Error> {
+    pub fn request(&self, action: &str, queries: &[(&str, &str)]) -> Result<String> {
         // gen timestamp.
         let nonce = Local::now().timestamp_subsec_nanos().to_string();
         let ts = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
@@ -147,8 +146,8 @@ impl<'a> RequestBuilder<'a> {
         access_key_secret: &'a str,
         endpoint: &'a str,
         version: &'a str,
-        action: String,
         method: String,
+        action: String,
     ) -> Self {
         RequestBuilder {
             access_key_id,
@@ -178,7 +177,7 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Send a request to api service.
-    pub fn send(self) -> Result<String, Error> {
+    pub fn send(self) -> Result<String> {
         // gen timestamp.
         let nonce = Local::now().timestamp_subsec_nanos().to_string();
         let ts = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();

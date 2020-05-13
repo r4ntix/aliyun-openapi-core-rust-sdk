@@ -15,9 +15,9 @@ fn rpc_client_get_no_query() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.get("DescribeRegions").send();
+    let response = aliyun_openapi_client.get("DescribeRegions").send()?;
 
-    assert!(response.is_ok());
+    assert!(response.contains("Regions"));
 
     Ok(())
 }
@@ -37,9 +37,9 @@ fn rpc_client_get_with_query() -> Result<(), Box<dyn Error>> {
     let response = aliyun_openapi_client
         .get("DescribeInstances")
         .query(&[("RegionId", "cn-hangzhou")])
-        .send();
+        .send()?;
 
-    assert!(response.is_ok());
+    assert!(response.contains("Instances"));
 
     Ok(())
 }
@@ -78,9 +78,9 @@ fn rpc_client_post_no_query() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.post("DescribeRegions").send();
+    let response = aliyun_openapi_client.post("DescribeRegions").send()?;
 
-    assert!(response.is_ok());
+    assert!(response.contains("Regions"));
 
     Ok(())
 }
@@ -100,9 +100,9 @@ fn rpc_client_post_with_query() -> Result<(), Box<dyn Error>> {
     let response = aliyun_openapi_client
         .post("DescribeInstances")
         .query(&[("RegionId", "cn-hangzhou")])
-        .send();
+        .send()?;
 
-    assert!(response.is_ok());
+    assert!(response.contains("Instances"));
 
     Ok(())
 }

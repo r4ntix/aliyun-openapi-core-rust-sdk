@@ -16,9 +16,9 @@ fn rpc_client_no_query_compatibility_020() -> Result<(), Box<dyn Error>> {
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.request("DescribeRegions", &[]);
+    let response = aliyun_openapi_client.request("DescribeRegions", &[])?;
 
-    assert!(response.is_ok());
+    assert!(response.contains("Regions"));
 
     Ok(())
 }
@@ -36,9 +36,9 @@ fn rpc_client_with_query_compatibility_020() -> Result<(), Box<dyn Error>> {
 
     // call `DescribeInstances` with queries.
     let response =
-        aliyun_openapi_client.request("DescribeInstances", &[("RegionId", "cn-hangzhou")]);
+        aliyun_openapi_client.request("DescribeInstances", &[("RegionId", "cn-hangzhou")])?;
 
-    assert!(response.is_ok());
+    assert!(response.contains("Instances"));
 
     Ok(())
 }

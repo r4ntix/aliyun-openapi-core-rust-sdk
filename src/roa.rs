@@ -1,7 +1,6 @@
-use base64;
+use anyhow::{anyhow, Result};
 use chrono::{Local, Utc};
 use crypto::{digest::Digest, hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1};
-use failure::{format_err, Error};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::ClientBuilder;
 use std::env;
@@ -55,6 +54,20 @@ impl Client {
         }
     }
 
+    /// Create a request with the `method` and `uri`.
+    ///
+    /// Returns a `RequestBuilder` for send request.
+    pub fn execute(&self, method: &str, uri: &str) -> RequestBuilder {
+        RequestBuilder::new(
+            &self.access_key_id,
+            &self.access_key_secret,
+            &self.endpoint,
+            &self.version,
+            String::from(method),
+            String::from(uri),
+        )
+    }
+
     /// Create a `GET` request with the `uri`.
     ///
     /// Returns a `RequestBuilder` for send request.
@@ -69,16 +82,11 @@ impl Client {
         self.execute("POST", uri)
     }
 
-    /// Create a request with the `method` and `uri`.
-    fn execute(&self, method: &str, uri: &str) -> RequestBuilder {
-        RequestBuilder::new(
-            &self.access_key_id,
-            &self.access_key_secret,
-            &self.endpoint,
-            &self.version,
-            String::from(method),
-            String::from(uri),
-        )
+    /// Create a `PUT` request with the `uri`.
+    ///
+    /// Returns a `RequestBuilder` for send request.
+    pub fn put(&self, uri: &str) -> RequestBuilder {
+        self.execute("PUT", uri)
     }
 }
 
@@ -143,15 +151,14 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Set body for request.
-    pub fn body(mut self, body: &'static str) -> Self {
-        // store body string.
-        self.request.body = Some(body.to_string());
+    pub fn body(mut self, body: &str) -> Self {
         // compute body length and md5.
         let mut md5 = Md5::new();
-        let body_bytes = body.as_bytes();
-        md5.input(body_bytes);
-        let body_md5 = HeaderValue::from_str(&base64::encode(&md5.result_str()));
-        let body_length = HeaderValue::from_str(&body_bytes.len().to_string());
+        let mut md5_result = [0_u8; 16];
+        md5.input_str(body);
+        md5.result(&mut md5_result);
+        let body_md5 = HeaderValue::from_str(&base64::encode(&md5_result));
+        let body_length = HeaderValue::from_str(&body.len().to_string());
         // update headers.
         if let Ok(body_length) = body_length {
             self.request.headers.insert("content-length", body_length);
@@ -159,6 +166,9 @@ impl<'a> RequestBuilder<'a> {
         if let Ok(body_md5) = body_md5 {
             self.request.headers.insert("content-md5", body_md5);
         }
+        // store body string.
+        self.request.body = Some(body.to_string());
+
         self
     }
 
@@ -196,7 +206,7 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Send a request to api service.
-    pub fn send(mut self) -> Result<String, Error> {
+    pub fn send(mut self) -> Result<String> {
         // gen timestamp.
         let nonce = Local::now().timestamp_subsec_nanos().to_string();
         let ts = Utc::now().format("%a, %d %b %Y %H:%M:%S GMT").to_string();
@@ -209,7 +219,7 @@ impl<'a> RequestBuilder<'a> {
         let endpoint = Url::parse(&self.endpoint)?;
         let host = endpoint
             .host_str()
-            .ok_or_else(|| format_err!("parse endpoint failed"))?;
+            .ok_or_else(|| anyhow!("parse endpoint failed"))?;
         self.request.headers.insert("host", host.parse()?);
 
         // compute `Authorization` field.
