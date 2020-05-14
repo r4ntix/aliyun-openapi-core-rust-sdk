@@ -1,7 +1,7 @@
 use anyhow::Result;
 use chrono::{Local, Utc};
 use crypto::{hmac::Hmac, mac::Mac, sha1::Sha1};
-use reqwest::ClientBuilder;
+use reqwest::blocking::ClientBuilder;
 use std::borrow::Borrow;
 use std::time::Duration;
 use url::form_urlencoded::byte_serialize;
@@ -116,7 +116,7 @@ impl Client {
         );
 
         // send request.
-        let response = reqwest::get(&final_url)?.text()?;
+        let response = reqwest::blocking::get(&final_url)?.text()?;
 
         // return response.
         Ok(response)

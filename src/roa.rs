@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
 use chrono::{Local, Utc};
 use crypto::{digest::Digest, hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1};
+use reqwest::blocking::ClientBuilder;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::ClientBuilder;
 use std::env;
 use std::time::Duration;
 use std::{borrow::Borrow, str::FromStr};
