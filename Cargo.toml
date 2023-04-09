@@ -29,3 +29,6 @@ sha1 = "0.10"
 thiserror = "1.0"
 time = { version = "0.3", features = ["formatting", "macros"] }
 url = "2.1.1"
+
+[dev-dependencies]
+tokio = { version = "1.19", default-features = false, features = ["io-util", "rt", "sync", "time", "macros"] }

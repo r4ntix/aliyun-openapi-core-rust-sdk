@@ -10,19 +10,14 @@ pub enum Error {
     InvalidHeader(#[from] InvalidHeaderValue),
 
     #[error("Request error: {0}")]
-    Request(#[from] RequestError),
+    InvalidRequest(String),
 
-    #[error("Error code: {error_code}, Error message: {error_message}")]
+    #[error("Request id: {request_id}, Error code: {error_code}, Error message: {error_message}")]
     InvalidResponse {
+        request_id: String,
         error_code: String,
         error_message: String,
     },
-}
-
-#[derive(Error, Debug)]
-pub enum RequestError {
-    #[error("Invalid request: {0}")]
-    InvalidRequest(String),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

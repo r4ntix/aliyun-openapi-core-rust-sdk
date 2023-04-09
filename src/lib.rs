@@ -102,6 +102,7 @@ mod rpc;
 
 pub use crate::roa::Client as ROAClient;
 pub use crate::rpc::Client as RPClient;
+
 pub mod client;
 
 pub trait OpenAPI<'a> {
