@@ -102,8 +102,15 @@ impl RPClient {
     /// Set queries for request.
     ///
     /// Returns a `Self` for send request.
-    pub fn query(mut self, queries: impl Into<Vec<(String, String)>>) -> Self {
-        self.request.query = queries.into();
+    pub fn query<I, T>(mut self, queries: I) -> Self
+    where
+        I: IntoIterator<Item = (T, T)>,
+        T: Into<String>,
+    {
+        self.request.query = queries
+            .into_iter()
+            .map(|v| (v.0.into(), v.1.into()))
+            .collect();
 
         self
     }
@@ -232,6 +239,7 @@ fn sign(key: &str, body: &str) -> Result<String> {
     Ok(base64::encode(code))
 }
 
+/// URL encode following [RFC3986](https://www.rfc-editor.org/rfc/rfc3986)
 fn url_encode(s: &str) -> String {
     let s: String = byte_serialize(s.as_bytes()).collect();
     s.replace("+", "%20")
@@ -243,19 +251,55 @@ fn url_encode(s: &str) -> String {
 mod tests {
     use super::*;
 
+    #[test]
+    fn url_encode_test() -> Result<()> {
+        assert_eq!(
+            url_encode("begin_+_*_~_-_._\"_ end"),
+            "begin_%2B_%2A_~_-_._%22_%20end"
+        );
+
+        Ok(())
+    }
+
     #[tokio::test]
-    async fn rpc_client_invalid_access_key_id() -> Result<()> {
+    async fn rpc_client_invalid_access_key_id_test() -> Result<()> {
         // create rpc style api client.
         let aliyun_openapi_client = RPClient::new(
             "access_key_id",
             "access_key_secret",
-            "https://vpc.aliyuncs.com/",
+            "https://ecs-cn-hangzhou.aliyuncs.com",
         );
 
         // call `DescribeRegions` with empty queries.
         match aliyun_openapi_client
-            .version("2016-04-28")
+            .version("2014-05-26")
             .get("DescribeRegions")
+            .text()
+            .await
+            .unwrap_err()
+        {
+            Error::InvalidResponse { error_code, .. } => {
+                assert_eq!(error_code, "InvalidAccessKeyId.NotFound")
+            }
+            _ => assert!(false),
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn rpc_client_get_with_query_test() -> Result<()> {
+        // create rpc style api client.
+        let aliyun_openapi_client = RPClient::new(
+            "access_key_id",
+            "access_key_secret",
+            "https://ecs-cn-hangzhou.aliyuncs.com",
+        );
+
+        match aliyun_openapi_client
+            .version("2014-05-26")
+            .get("DescribeInstances")
+            .query(vec![("RegionId", "cn-hangzhou")])
             .text()
             .await
             .unwrap_err()
