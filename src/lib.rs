@@ -100,6 +100,10 @@
 mod roa;
 mod rpc;
 
+#[deprecated(
+    since = "1.0.0",
+    note = "Please use the `aliyun_openapi_core_rust_sdk::client::roa::ROAClient` function instead"
+)]
 pub use crate::roa::Client as ROAClient;
 
 #[deprecated(
