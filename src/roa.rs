@@ -157,7 +157,7 @@ impl<'a> RequestBuilder<'a> {
         let mut md5_result = [0_u8; 16];
         md5.input_str(body);
         md5.result(&mut md5_result);
-        let body_md5 = HeaderValue::from_str(&base64::encode(&md5_result));
+        let body_md5 = HeaderValue::from_str(&base64::encode(md5_result));
         let body_length = HeaderValue::from_str(&body.len().to_string());
         // update headers.
         if let Ok(body_length) = body_length {
@@ -216,7 +216,7 @@ impl<'a> RequestBuilder<'a> {
             .insert("x-acs-signature-nonce", nonce.parse()?);
 
         // parse host of self.endpoint.
-        let endpoint = Url::parse(&self.endpoint)?;
+        let endpoint = Url::parse(self.endpoint)?;
         let host = endpoint
             .host_str()
             .ok_or_else(|| anyhow!("parse endpoint failed"))?;
@@ -233,7 +233,7 @@ impl<'a> RequestBuilder<'a> {
         let mut http_client = self
             .http_client_builder
             .build()?
-            .request(self.request.method.parse()?, &final_url);
+            .request(self.request.method.parse()?, final_url);
 
         // set body.
         if let Some(body) = self.request.body {

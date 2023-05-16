@@ -87,12 +87,12 @@ impl Client {
 
         // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
-        params.push(("Action", &action));
+        params.push(("Action", action));
         params.push(("AccessKeyId", &self.access_key_id));
         params.push(("SignatureNonce", &nonce));
         params.push(("Timestamp", &ts));
         params.push(("Version", &self.version));
-        params.extend_from_slice(&queries);
+        params.extend_from_slice(queries);
         params.sort_by_key(|item| item.0);
 
         // encode params.
@@ -116,7 +116,7 @@ impl Client {
         );
 
         // send request.
-        let response = reqwest::blocking::get(&final_url)?.text()?;
+        let response = reqwest::blocking::get(final_url)?.text()?;
 
         // return response.
         Ok(response)
@@ -185,10 +185,10 @@ impl<'a> RequestBuilder<'a> {
         // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
         params.push(("Action", &self.request.action));
-        params.push(("AccessKeyId", &self.access_key_id));
+        params.push(("AccessKeyId", self.access_key_id));
         params.push(("SignatureNonce", &nonce));
         params.push(("Timestamp", &ts));
-        params.push(("Version", &self.version));
+        params.push(("Version", self.version));
         params.extend(
             self.request
                 .query
@@ -221,7 +221,7 @@ impl<'a> RequestBuilder<'a> {
         let http_client = self
             .http_client_builder
             .build()?
-            .request(self.request.method.parse()?, &final_url);
+            .request(self.request.method.parse()?, final_url);
 
         // send request.
         let response = http_client.send()?.text()?;
@@ -254,7 +254,7 @@ fn sign(key: &str, body: &str) -> String {
 
 fn url_encode(s: &str) -> String {
     let s: String = byte_serialize(s.as_bytes()).collect();
-    s.replace("+", "%20")
-        .replace("*", "%2A")
+    s.replace('+', "%20")
+        .replace('*', "%2A")
         .replace("%7E", "~")
 }

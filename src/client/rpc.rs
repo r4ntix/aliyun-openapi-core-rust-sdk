@@ -242,8 +242,8 @@ fn sign(key: &str, body: &str) -> Result<String> {
 /// URL encode following [RFC3986](https://www.rfc-editor.org/rfc/rfc3986)
 fn url_encode(s: &str) -> String {
     let s: String = byte_serialize(s.as_bytes()).collect();
-    s.replace("+", "%20")
-        .replace("*", "%2A")
+    s.replace('+', "%20")
+        .replace('*', "%2A")
         .replace("%7E", "~")
 }
 

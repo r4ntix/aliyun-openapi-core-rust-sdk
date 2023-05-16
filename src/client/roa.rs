@@ -146,7 +146,7 @@ impl ROAClient {
             .insert("content-length", body.len().to_string().parse()?);
         self.request
             .headers
-            .insert("content-md5", base64::encode(&md5_result).parse()?);
+            .insert("content-md5", base64::encode(md5_result).parse()?);
 
         // store body string.
         self.request.body = Some(body);
