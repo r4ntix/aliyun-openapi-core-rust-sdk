@@ -191,7 +191,8 @@ impl RPClient {
             .collect();
         let sorted_query_string = params.join("&");
         let string_to_sign = format!(
-            "GET&{}&{}",
+            "{}&{}&{}",
+            self.request.method,
             url_encode("/"),
             url_encode(&sorted_query_string)
         );
