@@ -336,3 +336,83 @@ impl<'a> RequestBuilder<'a> {
         base64::encode(code)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn roa_client_get_no_query() -> Result<()> {
+        // create roa style api client.
+        let aliyun_openapi_client = Client::new(
+            env::var("ACCESS_KEY_ID")?,
+            env::var("ACCESS_KEY_SECRET")?,
+            String::from("https://ros.aliyuncs.com"),
+            String::from("2015-09-01"),
+        );
+
+        // call `DescribeRegions` with empty queries.
+        let response = aliyun_openapi_client.get("/regions").send()?;
+
+        assert!(response.contains("Regions"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn roa_client_get_with_timeout() -> Result<()> {
+        // create roa style api client.
+        let aliyun_openapi_client = Client::new(
+            env::var("ACCESS_KEY_ID")?,
+            env::var("ACCESS_KEY_SECRET")?,
+            String::from("https://ros.aliyuncs.com"),
+            String::from("2015-09-01"),
+        );
+
+        // call `DescribeRegions` with empty queries.
+        let response = aliyun_openapi_client
+            .get("/regions")
+            .timeout(Duration::from_millis(1))
+            .send();
+
+        assert!(response.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn roa_client_post_with_json_params() -> Result<()> {
+        // create roa style api client.
+        let aliyun_openapi_client = Client::new(
+            env::var("ACCESS_KEY_ID")?,
+            env::var("ACCESS_KEY_SECRET")?,
+            String::from("http://mt.aliyuncs.com"),
+            String::from("2019-01-02"),
+        );
+
+        // create params.
+        let mut params = HashMap::new();
+        params.insert("SourceText", "你好");
+        params.insert("SourceLanguage", "zh");
+        params.insert("TargetLanguage", "en");
+        params.insert("FormatType", "text");
+        params.insert("Scene", "general");
+
+        // call `DescribeRegions` with empty queries.
+        let response = aliyun_openapi_client
+            .post("/api/translate/web/general")
+            .header(&[("Content-Type", "application/json")])
+            .body(&json!(params).to_string())
+            .send()?;
+
+        println!("response: {response}");
+
+        assert!(response.contains("Hello"));
+
+        Ok(())
+    }
+}
