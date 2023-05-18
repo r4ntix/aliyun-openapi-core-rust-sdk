@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let response = aliyun_openapi_client
         .post("/nlp/api/translate/standard")
         .header(&[("Content-Type", "application/json")])
-        .body(&json!(params).to_string())
+        .body(&json!(params).to_string())?
         .send()?;
     println!("Translate response: {}", response);
 

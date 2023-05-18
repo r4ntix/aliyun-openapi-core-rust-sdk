@@ -1,9 +1,11 @@
-use anyhow::Result;
-use chrono::{Local, Utc};
-use crypto::{hmac::Hmac, mac::Mac, sha1::Sha1};
+use anyhow::{anyhow, Result};
+use hmac::{Hmac, Mac};
 use reqwest::blocking::ClientBuilder;
+use sha1::Sha1;
 use std::borrow::Borrow;
 use std::time::Duration;
+use time::format_description::well_known::Iso8601;
+use time::OffsetDateTime;
 use url::form_urlencoded::byte_serialize;
 
 /// Default const param.
@@ -12,6 +14,8 @@ const DEFAULT_PARAM: &[(&str, &str)] = &[
     ("SignatureMethod", "HMAC-SHA1"),
     ("SignatureVersion", "1.0"),
 ];
+
+type HamcSha1 = Hmac<Sha1>;
 
 /// Config for request.
 #[derive(Debug)]
@@ -82,8 +86,11 @@ impl Client {
     #[deprecated(since = "0.3.0", note = "Please use the `get` function instead")]
     pub fn request(&self, action: &str, queries: &[(&str, &str)]) -> Result<String> {
         // gen timestamp.
-        let nonce = Local::now().timestamp_subsec_nanos().to_string();
-        let ts = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let now_utc = OffsetDateTime::now_utc();
+        let nonce = now_utc.unix_timestamp_nanos().to_string();
+        let ts = now_utc
+            .format(&Iso8601::DEFAULT)
+            .map_err(|e| anyhow!(format!("Invalid ISO 8601 Date: {e}")))?;
 
         // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
@@ -108,7 +115,7 @@ impl Client {
         );
 
         // sign params, get finnal request url.
-        let sign = sign(&format!("{}&", self.access_key_secret), &string_to_sign);
+        let sign = sign(&format!("{}&", self.access_key_secret), &string_to_sign)?;
         let signature = url_encode(&sign);
         let final_url = format!(
             "{}?Signature={}&{}",
@@ -179,8 +186,11 @@ impl<'a> RequestBuilder<'a> {
     /// Send a request to api service.
     pub fn send(self) -> Result<String> {
         // gen timestamp.
-        let nonce = Local::now().timestamp_subsec_nanos().to_string();
-        let ts = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let now_utc = OffsetDateTime::now_utc();
+        let nonce = now_utc.unix_timestamp_nanos().to_string();
+        let ts = now_utc
+            .format(&Iso8601::DEFAULT)
+            .map_err(|e| anyhow!(format!("Invalid ISO 8601 Date: {e}")))?;
 
         // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
@@ -211,7 +221,7 @@ impl<'a> RequestBuilder<'a> {
         );
 
         // sign params, get finnal request url.
-        let sign = sign(&format!("{}&", self.access_key_secret), &string_to_sign);
+        let sign = sign(&format!("{}&", self.access_key_secret), &string_to_sign)?;
         let signature = url_encode(&sign);
         let final_url = format!(
             "{}?Signature={}&{}",
@@ -245,12 +255,14 @@ impl<'a> RequestBuilder<'a> {
     }
 }
 
-fn sign(key: &str, body: &str) -> String {
-    let mut mac = Hmac::new(Sha1::new(), key.as_bytes());
-    mac.input(body.as_bytes());
-    let result = mac.result();
-    let code = result.code();
-    base64::encode(code)
+fn sign(key: &str, body: &str) -> Result<String> {
+    let mut mac = HamcSha1::new_from_slice(key.as_bytes())
+        .map_err(|e| anyhow!(format!("Invalid HMAC-SHA1 secret key: {}", e)))?;
+    mac.update(body.as_bytes());
+    let result = mac.finalize();
+    let code = result.into_bytes();
+
+    Ok(base64::encode(code))
 }
 
 fn url_encode(s: &str) -> String {

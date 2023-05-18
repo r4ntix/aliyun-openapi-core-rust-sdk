@@ -1,11 +1,14 @@
 use anyhow::{anyhow, Result};
-use chrono::{Local, Utc};
-use crypto::{digest::Digest, hmac::Hmac, mac::Mac, md5::Md5, sha1::Sha1};
+use hmac::{Hmac, Mac};
+use md5::{Digest, Md5};
 use reqwest::blocking::ClientBuilder;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use sha1::Sha1;
 use std::env;
 use std::time::Duration;
 use std::{borrow::Borrow, str::FromStr};
+use time::macros::format_description;
+use time::OffsetDateTime;
 use url::Url;
 
 /// Default const header.
@@ -14,6 +17,8 @@ const DEFAULT_HEADER: &[(&str, &str)] = &[
     ("x-acs-signature-method", "HMAC-SHA1"),
     ("x-acs-signature-version", "1.0"),
 ];
+
+type HamcSha1 = Hmac<Sha1>;
 
 /// Config for request.
 #[derive(Debug)]
@@ -151,25 +156,25 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Set body for request.
-    pub fn body(mut self, body: &str) -> Self {
+    pub fn body(mut self, body: &str) -> Result<Self> {
         // compute body length and md5.
-        let mut md5 = Md5::new();
-        let mut md5_result = [0_u8; 16];
-        md5.input_str(body);
-        md5.result(&mut md5_result);
-        let body_md5 = HeaderValue::from_str(&base64::encode(md5_result));
-        let body_length = HeaderValue::from_str(&body.len().to_string());
-        // update headers.
-        if let Ok(body_length) = body_length {
-            self.request.headers.insert("content-length", body_length);
-        }
-        if let Ok(body_md5) = body_md5 {
-            self.request.headers.insert("content-md5", body_md5);
-        }
-        // store body string.
-        self.request.body = Some(body.to_string());
+        let body = body.to_string();
+        let mut hasher = Md5::new();
+        hasher.update(body.as_bytes());
+        let md5_result = hasher.finalize();
 
-        self
+        // update headers.
+        self.request
+            .headers
+            .insert("content-length", body.len().to_string().parse()?);
+        self.request
+            .headers
+            .insert("content-md5", base64::encode(md5_result).parse()?);
+
+        // store body string.
+        self.request.body = Some(body);
+
+        Ok(self)
     }
 
     /// Set header for request.
@@ -207,10 +212,19 @@ impl<'a> RequestBuilder<'a> {
 
     /// Send a request to api service.
     pub fn send(mut self) -> Result<String> {
-        // gen timestamp.
-        let nonce = Local::now().timestamp_subsec_nanos().to_string();
-        let ts = Utc::now().format("%a, %d %b %Y %H:%M:%S GMT").to_string();
+        // add date header.
+        // RFC 1123: %a, %d %b %Y %H:%M:%S GMT
+        let format = format_description!(
+            "[weekday repr:short], [day] [month repr:short] [year] [hour]:[minute]:[second] GMT"
+        );
+        let now_utc = OffsetDateTime::now_utc();
+        let ts = now_utc
+            .format(&format)
+            .map_err(|e| anyhow!(format!("Invalid RFC 1123 Date: {}", e)))?;
         self.request.headers.insert("date", ts.parse()?);
+
+        // add nonce header.
+        let nonce = now_utc.unix_timestamp_nanos().to_string();
         self.request
             .headers
             .insert("x-acs-signature-nonce", nonce.parse()?);
@@ -223,7 +237,7 @@ impl<'a> RequestBuilder<'a> {
         self.request.headers.insert("host", host.parse()?);
 
         // compute `Authorization` field.
-        let authorization = format!("acs {}:{}", self.access_key_id, self.signature());
+        let authorization = format!("acs {}:{}", self.access_key_id, self.signature()?);
         self.request
             .headers
             .insert("Authorization", authorization.parse()?);
@@ -303,7 +317,7 @@ impl<'a> RequestBuilder<'a> {
     }
 
     /// Compute signature for request.
-    fn signature(&self) -> String {
+    fn signature(&self) -> Result<String> {
         // build body.
         let canonicalized_headers = self.canonicalized_headers();
         let canonicalized_resource = self.canonicalized_resource();
@@ -329,11 +343,13 @@ impl<'a> RequestBuilder<'a> {
         );
 
         // sign body.
-        let mut mac = Hmac::new(Sha1::new(), self.access_key_secret.as_bytes());
-        mac.input(body.as_bytes());
-        let result = mac.result();
-        let code = result.code();
-        base64::encode(code)
+        let mut mac = HamcSha1::new_from_slice(self.access_key_secret.as_bytes())
+            .map_err(|e| anyhow!(format!("Invalid HMAC-SHA1 secret key: {}", e)))?;
+        mac.update(body.as_bytes());
+        let result = mac.finalize();
+        let code = result.into_bytes();
+
+        Ok(base64::encode(code))
     }
 }
 
@@ -406,7 +422,7 @@ mod tests {
         let response = aliyun_openapi_client
             .post("/api/translate/web/general")
             .header(&[("Content-Type", "application/json")])
-            .body(&json!(params).to_string())
+            .body(&json!(params).to_string())?
             .send()?;
 
         println!("response: {response}");
