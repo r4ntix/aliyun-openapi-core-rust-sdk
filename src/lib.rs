@@ -13,20 +13,19 @@
 //! The RPC style client:
 //!
 //! ```no_run
-//! use aliyun_openapi_core_rust_sdk::RPClient;
+//! use aliyun_openapi_core_rust_sdk::client::rpc::RPClient;
 //! use std::error::Error;
 //!
 //! fn main() -> Result<(), Box<dyn Error>> {
 //!     // create rpc style api client.
 //!     let aliyun_openapi_client = RPClient::new(
-//!         String::from("<access_key_id>"),
-//!         String::from("<access_key_secret>"),
-//!         String::from("<endpoint>"),
-//!         String::from("<version>"),
+//!         "<access_key_id>",
+//!         "<access_key_secret>",
+//!         "<endpoint>",
 //!     );
 //!
 //!     // call `DescribeRegions` with empty queries.
-//!     let response = aliyun_openapi_client.get("DescribeRegions").send()?;
+//!     let response = aliyun_openapi_client.version("2014-05-26").get("DescribeRegions").send()?;
 //!     println!("DescribeRegions response: {}", response);
 //!
 //!     // call `DescribeInstances` with queries.
