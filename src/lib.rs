@@ -16,7 +16,8 @@
 //! use aliyun_openapi_core_rust_sdk::client::rpc::RPClient;
 //! use std::error::Error;
 //!
-//! fn main() -> Result<(), Box<dyn Error>> {
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn Error>> {
 //!     // create rpc style api client.
 //!     let aliyun_openapi_client = RPClient::new(
 //!         "<access_key_id>",
@@ -24,16 +25,12 @@
 //!         "<endpoint>",
 //!     );
 //!
-//!     // call `DescribeRegions` with empty queries.
-//!     let response = aliyun_openapi_client.version("2014-05-26").get("DescribeRegions").send()?;
-//!     println!("DescribeRegions response: {}", response);
-//!
 //!     // call `DescribeInstances` with queries.
 //!     let response = aliyun_openapi_client
 //!         .get("DescribeInstances")
-//!         .query(&[("RegionId", "cn-hangzhou")])
-//!         .send()?;
-//!     println!("DescribeInstances response: {}", response);
+//!         .query([("RegionId", "cn-hangzhou")])
+//!         .text().await?;
+//!     println!("DescribeInstances response: {response}");
 //!
 //!     Ok(())
 //! }
