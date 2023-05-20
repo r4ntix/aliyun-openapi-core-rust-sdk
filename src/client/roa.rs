@@ -350,66 +350,81 @@ impl ROAClient {
 
 #[cfg(test)]
 mod tests {
+    use std::env;
+
     use serde_json::json;
 
     use super::*;
 
     #[tokio::test]
     async fn roa_client_invalid_access_key_id_test() -> Result<()> {
-        // create rpc style api client.
+        // create roa style api client.
         let aliyun_openapi_client = ROAClient::new(
-            "access_key_id",
-            "access_key_secret",
+            env::var("ACCESS_KEY_ID").unwrap(),
+            env::var("ACCESS_KEY_SECRET").unwrap(),
             "https://ros.aliyuncs.com",
         );
 
         // call `DescribeRegions` with empty queries.
-        match aliyun_openapi_client
+        let response = aliyun_openapi_client
             .version("2015-09-01")
             .get("/regions")
             .text()
-            .await
-            .unwrap_err()
-        {
-            Error::InvalidResponse { error_code, .. } => {
-                assert_eq!(error_code, "InvalidAccessKeyId.NotFound")
-            }
-            _ => assert!(false),
-        };
+            .await?;
+
+        assert!(response.contains("Regions"));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn roa_client_get_with_timeout() -> Result<()> {
+        // create roa style api client.
+        let aliyun_openapi_client = ROAClient::new(
+            env::var("ACCESS_KEY_ID").unwrap(),
+            env::var("ACCESS_KEY_SECRET").unwrap(),
+            "https://ros.aliyuncs.com",
+        );
+
+        // call `DescribeRegions` with empty queries.
+        let response = aliyun_openapi_client
+            .version("2015-09-01")
+            .get("/regions")
+            .timeout(Duration::from_millis(1))
+            .text()
+            .await;
+
+        assert!(response.is_err());
 
         Ok(())
     }
 
     #[tokio::test]
     async fn roa_client_get_with_query_test() -> Result<()> {
-        // create rpc style api client.
+        // create roa style api client.
         let aliyun_openapi_client = ROAClient::new(
-            "access_key_id",
-            "access_key_secret",
-            "http://nlp.cn-shanghai.aliyuncs.com",
+            env::var("ACCESS_KEY_ID").unwrap(),
+            env::var("ACCESS_KEY_SECRET").unwrap(),
+            "http://mt.aliyuncs.com",
         );
 
         // create params.
         let mut params = HashMap::new();
-        params.insert("q", "你好");
-        params.insert("source", "zh");
-        params.insert("target", "en");
-        params.insert("format", "text");
+        params.insert("SourceText", "你好");
+        params.insert("SourceLanguage", "zh");
+        params.insert("TargetLanguage", "en");
+        params.insert("FormatType", "text");
+        params.insert("Scene", "general");
 
-        match aliyun_openapi_client
+        let response = aliyun_openapi_client
             .version("2018-04-08")
-            .post("/nlp/api/translate/standard")
+            .post("/api/translate/web/general")
             .header([("Content-Type".to_string(), "application/json".to_string())])?
             .body(json!(params).to_string())?
             .text()
-            .await
-            .unwrap_err()
-        {
-            Error::InvalidResponse { error_code, .. } => {
-                assert_eq!(error_code, "InvalidAccessKeyId.NotFound")
-            }
-            _ => assert!(false),
-        };
+            .await?;
+
+        assert!(response.contains("Hello"));
 
         Ok(())
     }
