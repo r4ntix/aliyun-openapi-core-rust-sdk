@@ -425,8 +425,6 @@ mod tests {
             .body(&json!(params).to_string())?
             .send()?;
 
-        println!("response: {response}");
-
         assert!(response.contains("Hello"));
 
         Ok(())

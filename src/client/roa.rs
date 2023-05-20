@@ -40,7 +40,7 @@ const DEFAULT_HEADER: &[(&str, &str)] = &[
 type HamcSha1 = Hmac<Sha1>;
 
 /// Config for request.
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 struct Request {
     method: String,
     uri: String,
@@ -49,9 +49,10 @@ struct Request {
     headers: HeaderMap,
     project: Option<String>,
     version: String,
+    timeout: Option<Duration>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ROAClient {
     /// The access key id of aliyun developer account.
     access_key_id: String,
@@ -59,8 +60,6 @@ pub struct ROAClient {
     access_key_secret: String,
     /// The api endpoint of aliyun api service (need start with http:// or https://).
     endpoint: String,
-    /// The http client builder used to send request.
-    http_client_builder: ClientBuilder,
     /// The config of http request.
     request: Request,
 }
@@ -76,7 +75,6 @@ impl ROAClient {
             access_key_id: access_key_id.into(),
             access_key_secret: access_key_secret.into(),
             endpoint: endpoint.into(),
-            http_client_builder: ClientBuilder::new(),
             request: Default::default(),
         }
     }
@@ -177,7 +175,7 @@ impl ROAClient {
     ///
     /// Default is no timeout.
     pub fn timeout(mut self, timeout: Duration) -> Self {
-        self.http_client_builder = self.http_client_builder.timeout(timeout);
+        self.request.timeout = Some(timeout);
 
         self
     }
@@ -236,7 +234,11 @@ impl ROAClient {
 
         // build http client.
         let final_url = format!("{}{}", self.endpoint, self.request.uri);
-        let mut http_client = self.http_client_builder.build()?.request(
+        let mut http_client_builder = ClientBuilder::new();
+        if let Some(timeout) = self.request.timeout {
+            http_client_builder = http_client_builder.timeout(timeout);
+        }
+        let mut http_client = http_client_builder.build()?.request(
             self.request
                 .method
                 .parse()
