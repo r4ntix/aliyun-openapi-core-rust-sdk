@@ -1,26 +1,33 @@
-use aliyun_openapi_core_rust_sdk::RPClient;
+use aliyun_openapi_core_rust_sdk::client::rpc::RPClient;
 use std::env;
 use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     // create rpc style api client.
     let aliyun_openapi_client = RPClient::new(
         env::var("ACCESS_KEY_ID")?,
         env::var("ACCESS_KEY_SECRET")?,
-        String::from("https://ecs.aliyuncs.com/"),
-        String::from("2014-05-26"),
+        "https://ecs.aliyuncs.com/",
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.get("DescribeRegions").send()?;
-    println!("DescribeRegions response: {}", response);
+    let response = aliyun_openapi_client
+        .clone()
+        .version("2014-05-26")
+        .get("DescribeRegions")
+        .text()
+        .await?;
+    println!("DescribeRegions response: {response}");
 
     // call `DescribeInstances` with queries.
     let response = aliyun_openapi_client
+        .version("2014-05-26")
         .get("DescribeInstances")
-        .query(&[("RegionId", "cn-hangzhou")])
-        .send()?;
-    println!("DescribeInstances response: {}", response);
+        .query([("RegionId", "cn-hangzhou")])
+        .text()
+        .await?;
+    println!("DescribeInstances response: {response}");
 
     Ok(())
 }
