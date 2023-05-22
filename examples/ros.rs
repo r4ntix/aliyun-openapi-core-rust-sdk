@@ -1,18 +1,23 @@
-use aliyun_openapi_core_rust_sdk::ROAClient;
+use aliyun_openapi_core_rust_sdk::client::roa::ROAClient;
 use std::env;
 use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     // create roa style api client.
     let aliyun_openapi_client = ROAClient::new(
         env::var("ACCESS_KEY_ID")?,
         env::var("ACCESS_KEY_SECRET")?,
-        String::from("https://ros.aliyuncs.com"),
-        String::from("2015-09-01"),
+        "https://ros.aliyuncs.com",
     );
 
     // call `DescribeRegions` with empty queries.
-    let response = aliyun_openapi_client.get("/regions").send()?;
+    let response = aliyun_openapi_client
+        .version("2015-09-01")
+        .get("/regions")
+        .text()
+        .await?;
+
     println!("DescribeRegions response: {}", response);
 
     Ok(())
