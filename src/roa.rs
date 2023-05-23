@@ -31,6 +31,10 @@ struct Request {
 }
 
 /// The roa style api client.
+#[deprecated(
+    since = "1.0.0",
+    note = "Please use the `aliyun_openapi_core_rust_sdk::client::roa::ROAClient` instead"
+)]
 #[derive(Clone, Debug)]
 pub struct Client {
     /// The access key id of aliyun developer account.
@@ -44,6 +48,8 @@ pub struct Client {
 }
 
 impl Client {
+    #![allow(deprecated)]
+
     /// Create a roa style api client.
     pub fn new(
         access_key_id: String,
@@ -355,6 +361,8 @@ impl<'a> RequestBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)]
+
     use std::collections::HashMap;
 
     use serde_json::json;

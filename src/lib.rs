@@ -97,19 +97,20 @@
 //! # vpc example
 //! cargo run --example vpc
 //! ```
+#![allow(deprecated)]
 
 mod roa;
 mod rpc;
 
 #[deprecated(
     since = "1.0.0",
-    note = "Please use the `aliyun_openapi_core_rust_sdk::client::roa::ROAClient` function instead"
+    note = "Please use the `aliyun_openapi_core_rust_sdk::client::roa::ROAClient` instead"
 )]
 pub use crate::roa::Client as ROAClient;
 
 #[deprecated(
     since = "1.0.0",
-    note = "Please use the `aliyun_openapi_core_rust_sdk::client::rpc::RPClient` function instead"
+    note = "Please use the `aliyun_openapi_core_rust_sdk::client::rpc::RPClient` instead"
 )]
 pub use crate::rpc::Client as RPClient;
 

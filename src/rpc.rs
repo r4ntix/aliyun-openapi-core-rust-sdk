@@ -26,6 +26,10 @@ struct Request {
 }
 
 /// The rpc style api client.
+#[deprecated(
+    since = "1.0.0",
+    note = "Please use the `aliyun_openapi_core_rust_sdk::client::rpc::RPClient` instead"
+)]
 #[derive(Clone, Debug)]
 pub struct Client {
     /// The access key id of aliyun developer account.
@@ -39,6 +43,8 @@ pub struct Client {
 }
 
 impl Client {
+    #![allow(deprecated)]
+
     /// Create a rpc style api client.
     pub fn new(
         access_key_id: String,
@@ -274,6 +280,8 @@ fn url_encode(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)]
+
     use std::env;
 
     use super::*;
@@ -281,8 +289,6 @@ mod tests {
     // 0.2.0 version, rpc style client test.
     #[test]
     fn rpc_client_no_query_compatibility_020() -> Result<()> {
-        #![allow(deprecated)]
-
         // create rpc style api client.
         let aliyun_openapi_client = Client::new(
             env::var("ACCESS_KEY_ID")?,
@@ -302,8 +308,6 @@ mod tests {
     // 0.2.0 version, rpc style client test with query.
     #[test]
     fn rpc_client_with_query_compatibility_020() -> Result<()> {
-        #![allow(deprecated)]
-
         // create rpc style api client.
         let aliyun_openapi_client = Client::new(
             env::var("ACCESS_KEY_ID")?,
