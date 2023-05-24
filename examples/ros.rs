@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .text()
         .await?;
 
-    println!("DescribeRegions response: {}", response);
+    println!("DescribeRegions response:\n{response}");
 
     Ok(())
 }

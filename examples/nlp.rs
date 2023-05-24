@@ -21,6 +21,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     params.insert("FormatType", "text");
     params.insert("Scene", "general");
 
+    // call `Translate` with json params.
     let response = aliyun_openapi_client
         .version("2018-04-08")
         .post("/api/translate/web/general")
@@ -29,7 +30,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .text()
         .await?;
 
-    println!("Translate response: {}", response);
+    println!("Translate response:\n{response}");
 
     Ok(())
 }

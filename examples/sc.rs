@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .text()
         .await?;
 
-    println!("ListCluster response: {}", response);
+    println!("ListCluster response:\n{response}");
 
     Ok(())
 }

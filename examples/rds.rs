@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .get("DescribeRegions")
         .text()
         .await?;
-    println!("DescribeRegions response: {}", response);
+    println!("DescribeRegions response:\n{response}\n");
 
     // call `DescribeDBInstances` with queries.
     let response = aliyun_openapi_client
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .query([("RegionId", "cn-hangzhou")])
         .text()
         .await?;
-    println!("DescribeDBInstances response: {}", response);
+    println!("DescribeDBInstances response:\n{response}");
 
     Ok(())
 }
