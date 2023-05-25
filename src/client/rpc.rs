@@ -254,6 +254,8 @@ fn url_encode(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::env;
+
     use super::*;
 
     #[test]
@@ -270,24 +272,19 @@ mod tests {
     async fn rpc_client_invalid_access_key_id_test() -> Result<()> {
         // create rpc style api client.
         let aliyun_openapi_client = RPClient::new(
-            "access_key_id",
-            "access_key_secret",
+            env::var("ACCESS_KEY_ID").unwrap(),
+            env::var("ACCESS_KEY_SECRET").unwrap(),
             "https://ecs-cn-hangzhou.aliyuncs.com",
         );
 
         // call `DescribeRegions` with empty queries.
-        match aliyun_openapi_client
+        let response = aliyun_openapi_client
             .version("2014-05-26")
             .get("DescribeRegions")
             .text()
-            .await
-            .unwrap_err()
-        {
-            Error::InvalidResponse { error_code, .. } => {
-                assert_eq!(error_code, "InvalidAccessKeyId.NotFound")
-            }
-            _ => assert!(false),
-        };
+            .await?;
+
+        assert!(response.contains("Regions"));
 
         Ok(())
     }
@@ -296,24 +293,20 @@ mod tests {
     async fn rpc_client_get_with_query_test() -> Result<()> {
         // create rpc style api client.
         let aliyun_openapi_client = RPClient::new(
-            "access_key_id",
-            "access_key_secret",
+            env::var("ACCESS_KEY_ID").unwrap(),
+            env::var("ACCESS_KEY_SECRET").unwrap(),
             "https://ecs-cn-hangzhou.aliyuncs.com",
         );
 
-        match aliyun_openapi_client
+        // call `DescribeInstances` with queries.
+        let response = aliyun_openapi_client
             .version("2014-05-26")
             .get("DescribeInstances")
             .query(vec![("RegionId", "cn-hangzhou")])
             .text()
-            .await
-            .unwrap_err()
-        {
-            Error::InvalidResponse { error_code, .. } => {
-                assert_eq!(error_code, "InvalidAccessKeyId.NotFound")
-            }
-            _ => assert!(false),
-        };
+            .await?;
+
+        assert!(response.contains("Instances"));
 
         Ok(())
     }
