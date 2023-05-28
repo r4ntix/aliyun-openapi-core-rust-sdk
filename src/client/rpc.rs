@@ -6,6 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha1::Sha1;
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
 use url::form_urlencoded::byte_serialize;
+use uuid::Uuid;
 
 use crate::client::error::{Error, Result};
 
@@ -162,9 +163,8 @@ impl RPClient {
         }
 
         // build params.
-        let now_utc = OffsetDateTime::now_utc();
-        let nonce = now_utc.unix_timestamp_nanos().to_string();
-        let ts = now_utc
+        let nonce = Uuid::new_v4().to_string();
+        let ts = OffsetDateTime::now_utc()
             .format(&Iso8601::DEFAULT)
             .map_err(|e| Error::InvalidRequest(format!("Invalid ISO 8601 Date: {e}")))?;
 

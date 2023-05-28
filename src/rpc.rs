@@ -7,6 +7,7 @@ use std::time::Duration;
 use time::format_description::well_known::Iso8601;
 use time::OffsetDateTime;
 use url::form_urlencoded::byte_serialize;
+use uuid::Uuid;
 
 /// Default const param.
 const DEFAULT_PARAM: &[(&str, &str)] = &[
@@ -91,14 +92,12 @@ impl Client {
     /// if queries is empty, can pass `&[]`
     #[deprecated(since = "0.3.0", note = "Please use the `get` function instead")]
     pub fn request(&self, action: &str, queries: &[(&str, &str)]) -> Result<String> {
-        // gen timestamp.
-        let now_utc = OffsetDateTime::now_utc();
-        let nonce = now_utc.unix_timestamp_nanos().to_string();
-        let ts = now_utc
+        // build params.
+        let nonce = Uuid::new_v4().to_string();
+        let ts = OffsetDateTime::now_utc()
             .format(&Iso8601::DEFAULT)
             .map_err(|e| anyhow!(format!("Invalid ISO 8601 Date: {e}")))?;
 
-        // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
         params.push(("Action", action));
         params.push(("AccessKeyId", &self.access_key_id));
@@ -191,14 +190,12 @@ impl<'a> RequestBuilder<'a> {
 
     /// Send a request to api service.
     pub fn send(self) -> Result<String> {
-        // gen timestamp.
-        let now_utc = OffsetDateTime::now_utc();
-        let nonce = now_utc.unix_timestamp_nanos().to_string();
-        let ts = now_utc
+        // build params.
+        let nonce = Uuid::new_v4().to_string();
+        let ts = OffsetDateTime::now_utc()
             .format(&Iso8601::DEFAULT)
             .map_err(|e| anyhow!(format!("Invalid ISO 8601 Date: {e}")))?;
 
-        // build params.
         let mut params = Vec::from(DEFAULT_PARAM);
         params.push(("Action", &self.request.action));
         params.push(("AccessKeyId", self.access_key_id));

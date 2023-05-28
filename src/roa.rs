@@ -10,6 +10,7 @@ use std::{borrow::Borrow, str::FromStr};
 use time::macros::format_description;
 use time::OffsetDateTime;
 use url::Url;
+use uuid::Uuid;
 
 /// Default const header.
 const DEFAULT_HEADER: &[(&str, &str)] = &[
@@ -223,14 +224,13 @@ impl<'a> RequestBuilder<'a> {
         let format = format_description!(
             "[weekday repr:short], [day] [month repr:short] [year] [hour]:[minute]:[second] GMT"
         );
-        let now_utc = OffsetDateTime::now_utc();
-        let ts = now_utc
+        let ts = OffsetDateTime::now_utc()
             .format(&format)
             .map_err(|e| anyhow!(format!("Invalid RFC 1123 Date: {}", e)))?;
         self.request.headers.insert("date", ts.parse()?);
 
         // add nonce header.
-        let nonce = now_utc.unix_timestamp_nanos().to_string();
+        let nonce = Uuid::new_v4().to_string();
         self.request
             .headers
             .insert("x-acs-signature-nonce", nonce.parse()?);

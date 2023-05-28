@@ -10,6 +10,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha1::Sha1;
 use time::{macros::format_description, OffsetDateTime};
 use url::Url;
+use uuid::Uuid;
 
 use crate::client::error::{Error, Result};
 
@@ -213,14 +214,13 @@ impl ROAClient {
         let format = format_description!(
             "[weekday repr:short], [day] [month repr:short] [year] [hour]:[minute]:[second] GMT"
         );
-        let now_utc = OffsetDateTime::now_utc();
-        let ts = now_utc
+        let ts = OffsetDateTime::now_utc()
             .format(&format)
             .map_err(|e| Error::InvalidRequest(format!("Invalid RFC 1123 Date: {}", e)))?;
         self.request.headers.insert("date", ts.parse()?);
 
         // add nonce header.
-        let nonce = now_utc.unix_timestamp_nanos().to_string();
+        let nonce = Uuid::new_v4().to_string();
         self.request
             .headers
             .insert("x-acs-signature-nonce", nonce.parse()?);
