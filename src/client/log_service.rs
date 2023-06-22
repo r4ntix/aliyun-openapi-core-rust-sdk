@@ -361,7 +361,7 @@ mod tests {
             error_message: _,
         } = err
         {
-            assert_eq!(error_code, "InvalidAccessKeyId");
+            assert_eq!(error_code, "Unauthorized");
         } else {
             return Err(err);
         }
