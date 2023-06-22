@@ -115,33 +115,3 @@ pub use crate::roa::Client as ROAClient;
 pub use crate::rpc::Client as RPClient;
 
 pub mod client;
-
-pub trait OpenAPI<'a> {
-    type Output: 'a;
-
-    /// Create a `GET` request with the `uri`.
-    ///
-    /// Returns a `RequestBuilder` for send request.
-    fn get(&'a self, uri: &str) -> Self::Output {
-        self.execute("GET", uri)
-    }
-
-    /// Create a `POST` request with the `uri`.
-    ///
-    /// Returns a `RequestBuilder` for send request.
-    fn post(&'a self, uri: &str) -> Self::Output {
-        self.execute("POST", uri)
-    }
-
-    /// Create a `PUT` request with the `uri`.
-    ///
-    /// Returns a `RequestBuilder` for send request.
-    fn put(&'a self, uri: &str) -> Self::Output {
-        self.execute("PUT", uri)
-    }
-
-    /// Create a request with the `method` and `uri`.
-    ///
-    /// Returns a `RequestBuilder` for send request.
-    fn execute(&'a self, method: &str, uri: &str) -> Self::Output;
-}
