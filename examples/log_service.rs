@@ -11,13 +11,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
         "https://cn-hangzhou.log.aliyuncs.com",
     );
 
-    // call `GetLogStore` api.
+    // call `ListProject` api.
+    let response = aliyun_openapi_client.clone().get("/").text().await?;
+    println!("ListProject response:\n{response}\n");
+
+    // call `GetProject` api.
     let response = aliyun_openapi_client
-        .get(format!("/logstores/{}", "logstore"))
-        .project("project")
+        .get("/")
+        .project("project_name")
         .text()
         .await?;
-    println!("GetLogStore response:\n{response}\n");
+    println!("GetProject response:\n{response}\n");
 
     Ok(())
 }
