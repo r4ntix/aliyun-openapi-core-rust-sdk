@@ -132,6 +132,9 @@ cargo run --example slb
 
 # vpc example
 cargo run --example vpc
+
+# log service(SLS) example
+cargo run --example log_service
 ```
 
 ## License
