@@ -34,10 +34,27 @@ aliyun-openapi-core-rust-sdk = "1.0.0"
 The RPC style client:
 
 ```rust
+use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 
 use aliyun_openapi_core_rust_sdk::client::rpc::RPClient;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+struct Region {
+    region_id: String,
+    region_endpoint: String,
+    local_name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+struct RegionList {
+    request_id: String,
+    regions: HashMap<String, Vec<Region>>,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -48,16 +65,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
         "https://ecs.aliyuncs.com/",
     );
 
-    // call `DescribeRegions` with empty queries.
+    // call `DescribeRegions` with empty queries, return `RegionList`
     let response = aliyun_openapi_client
         .clone()
         .version("2014-05-26")
         .get("DescribeRegions")
-        .text()
+        .json::<RegionList>()
         .await?;
-    println!("DescribeRegions response: {response}");
+    println!("DescribeRegions response: {response:#?}");
 
-    // call `DescribeInstances` with queries.
+    // call `DescribeInstances` with queries, return `String`
     let response = aliyun_openapi_client
         .version("2014-05-26")
         .get("DescribeInstances")
@@ -68,7 +85,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 ```
 
 The ROA style client:
@@ -79,7 +95,23 @@ use std::env;
 use std::error::Error;
 
 use aliyun_openapi_core_rust_sdk::client::roa::ROAClient;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+struct TranslateData {
+    word_count: String,
+    translated: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+struct Translate {
+    request_id: String,
+    data: TranslateData,
+    code: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -98,16 +130,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
     params.insert("FormatType", "text");
     params.insert("Scene", "general");
 
-    // call `Translate` with json params.
+    // call `Translate` with json params, return `Translate`
     let response = aliyun_openapi_client
         .version("2018-04-08")
         .post("/api/translate/web/general")
         .header([("Content-Type".to_string(), "application/json".to_string())])?
         .body(json!(params).to_string())?
-        .text()
+        .json::<Translate>()
         .await?;
 
-    println!("Translate response: {response}");
+    println!("Translate response: {response:#?}");
 
     Ok(())
 }
