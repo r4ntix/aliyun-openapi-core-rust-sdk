@@ -11,7 +11,7 @@ Aliyun OpenAPI POP core SDK for Rust.
 
 You must know your `AK`(`accessKeyId/accessKeySecret`), and the aliyun product's `endpoint` and `apiVersion`.
 
-For example, The ECS OpenAPI(https://help.aliyun.com/document_detail/25490.html), the API version is `2014-05-26`.
+For example, The [ECS OpenAPI](https://help.aliyun.com/document_detail/25490.html), the API version is `2014-05-26`.
 
 And the endpoint list can be found at [here](https://help.aliyun.com/document_detail/25489.html), the center endpoint is ecs.aliyuncs.com. Add http protocol `http` or `https`, should be `https://ecs.aliyuncs.com/`.
 
