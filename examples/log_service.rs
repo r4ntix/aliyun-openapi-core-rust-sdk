@@ -1,6 +1,15 @@
 use aliyun_openapi_core_rust_sdk::client::log_service::LogServiceClient;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::env;
 use std::error::Error;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ProjectList {
+    projects: Value,
+    count: usize,
+    total: usize,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -12,16 +21,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // call `ListProject` api.
-    let response = aliyun_openapi_client.clone().get("/").text().await?;
-    println!("ListProject response:\n{response}\n");
-
-    // call `GetProject` api.
     let response = aliyun_openapi_client
+        .clone()
+        .get("/")
+        .json::<ProjectList>()
+        .await?;
+    println!("ListProject response: {response:#?}");
+
+    // call `GetProject` api and parse error
+    let err = aliyun_openapi_client
         .get("/")
         .project("project_name")
         .text()
-        .await?;
-    println!("GetProject response:\n{response}\n");
+        .await
+        .unwrap_err();
+    println!("GetProject response err: {err:#?}");
 
     Ok(())
 }
