@@ -26,7 +26,7 @@ cargo add aliyun-openapi-core-rust-sdk
 Or add the following line to your Cargo.toml:
 
 ```toml
-aliyun-openapi-core-rust-sdk = "1.0.0"
+aliyun-openapi-core-rust-sdk = "1.1.0"
 ```
 
 ## Usage

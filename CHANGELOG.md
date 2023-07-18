@@ -2,11 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.1.0] - 2023-07-15
 
 ### Bug Fixes
 
 - Fix link in README.md
+
+### Documentation
+
+- Update log_service example
+- Update ros example
+- Update vpc example
+- Update slb example
+- Update sc example
+- Update rds example
 
 ### Features
 
@@ -27,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Update RPC & ROA client example
 - Add dependabot.yml of github
 - Update lib doc
+- Update changelog
 
 ## [1.0.0] - 2023-06-17
 
