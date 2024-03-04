@@ -15,7 +15,7 @@ edition = "2021"
 anyhow = "1.0.30"
 async-trait = "0.1"
 base16ct = { version = "0.2", features = ["std"] }
-base64 = "0.21"
+base64 = "0.22"
 futures = "0.3"
 hmac = "0.12"
 md-5 = "0.10"
